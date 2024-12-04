@@ -133,7 +133,7 @@ int main() {
     CUDA_CHECK(err);
 
     // 定义向量加法线程块和网格尺寸
-    int threads_per_block = 8;
+    int threads_per_block = 4;
     int blocks_per_grid = (vec_size + threads_per_block - 1) / threads_per_block;
 
     // 记录开始时间
