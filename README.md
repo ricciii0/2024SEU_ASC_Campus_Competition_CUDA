@@ -48,3 +48,9 @@ report.pdf
 
 - 考虑到不同同学的设备条件不一致，因此您无需追求绝对的高速，我们更希望看到您对这个题目本身的探索
 - 你可以修改程序进行优化，但不应该破坏逻辑上的正确性，除破坏逻辑正确性外的改动都是允许的
+
+
+# Submit
+
+Please submit your solution to [submit@seulinux.com](mailto:submit@seulinux.com) 
+(For competition, before 2025/01/01. No time limit for players for fun!)
