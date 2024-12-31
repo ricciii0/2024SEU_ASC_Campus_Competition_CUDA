@@ -133,7 +133,7 @@ int main() {
     CUDA_CHECK(err);
 
     // 定义向量加法线程块和网格尺寸
-    int threads_per_block = 4;
+    int threads_per_block = 256;
     int blocks_per_grid = (vec_size + threads_per_block - 1) / threads_per_block;
 
     // 记录开始时间
@@ -263,15 +263,35 @@ MNISTData load_mnist(const std::string& image_path, const std::string& label_pat
     return data;
 }
 
-// 简单的矩阵乘法核函数
+// 优化的矩阵乘法核函数
 __global__ void matrix_multiplication(float* A, float* B, float* C, int N) {
+    __shared__ float As[16][16];
+    __shared__ float Bs[16][16];
+
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
-    if(row < N && col < N) {
-        float sum = 0.0f;
-        for(int k = 0; k < N; ++k) {
-            sum += A[row * N + k] * B[k * N + col];
+    float sum = 0.0f;
+
+    for (int k = 0; k < (N + 16 - 1) / 16; ++k) {
+        if (row < N && k * 16 + threadIdx.x < N) {
+            As[threadIdx.y][threadIdx.x] = A[row * N + k * 16 + threadIdx.x];
+        } else {
+            As[threadIdx.y][threadIdx.x] = 0.0f;
         }
+        if (col < N && k * 16 + threadIdx.y < N) {
+            Bs[threadIdx.y][threadIdx.x] = B[(k * 16 + threadIdx.y) * N + col];
+        } else {
+            Bs[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+        __syncthreads();
+
+        for (int n = 0; n < 16; ++n) {
+            sum += As[threadIdx.y][n] * Bs[n][threadIdx.x];
+        }
+        __syncthreads();
+    }
+
+    if (row < N && col < N) {
         C[row * N + col] = sum;
     }
 }
@@ -283,3 +303,4 @@ __global__ void vector_addition(float* A, float* B, float* C, int N) {
         C[idx] = A[idx] + B[idx];
     }
 } 
+
